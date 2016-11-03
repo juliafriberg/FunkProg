@@ -27,13 +27,14 @@ empty = Empty
 
 value :: Hand -> Integer
 value hand 
-	| valueCards hand <= 21 = valueCards hand
-	| otherwise = valueCards hand - 10 * numberOfAces hand 
+	| val <= 21 = val
+	| otherwise = val - 10 * numberOfAces hand 
+	where val = valueCards hand
 
 
 valueCards :: Hand -> Integer
 valueCards Empty = 0
-valueCards (Add card hand) = valueCard card + value hand 
+valueCards (Add card hand) = valueCard card + valueCards hand 
 
 valueRank :: Rank -> Integer
 valueRank rank = 
@@ -50,7 +51,7 @@ valueCard card = valueRank (rank card)
 numberOfAces :: Hand -> Integer
 numberOfAces Empty           = 0
 numberOfAces (Add (Card Ace _) hand)  = 1 + numberOfAces hand
-numberOfAces (Add card hand) = numberOfAces hand
+numberOfAces (Add _ hand) = numberOfAces hand
 
 
 gameOver :: Hand -> Bool
