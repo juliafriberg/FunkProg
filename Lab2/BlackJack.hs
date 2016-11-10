@@ -152,10 +152,11 @@ c `belongsTo` (Add c' h) = ((c == c') || (c `belongsTo` h))
 
 
 prop_size_shuffle :: StdGen -> Hand -> Bool
-prop_size_shuffle = undefined
+prop_size_shuffle g hand = size hand == size (shuffle' g hand)
 
 
-{-implementation = Interface
+
+implementation = Interface
     { iEmpty    = empty
       , iFullDeck = fullDeck
       , iValue    = value
@@ -163,8 +164,8 @@ prop_size_shuffle = undefined
       , iWinner   = winner 
       , iDraw     = draw
       , iPlayBank = playBank
-      , iShuffle  = shuffle
+      , iShuffle  = shuffle'
     }
 
 main :: IO ()
-main = runGame implementation-}
+main = runGame implementation
