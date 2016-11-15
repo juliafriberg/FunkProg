@@ -2,7 +2,7 @@ module BlackJack where
 import Cards
 import RunGame
 import Test.QuickCheck
-import System.Random    
+import System.Random   
 
 -- PART A
 
@@ -177,8 +177,18 @@ c `belongsTo` (Add c' h) = (c == c') || (c `belongsTo` h)
 prop_size_shuffle :: StdGen -> Hand -> Bool
 prop_size_shuffle g hand = size hand == size (shuffle' g hand)
 
+-- Converts a hand to a string (additional functionality)
+handToString :: Hand -> String
+handToString Empty = "Empty"
+handToString (Add card Empty) = cardToString card ++ "\n"
+handToString (Add card hand) = cardToString card ++ "\n" ++ handToString hand
 
+-- Converts a card to a string (additional functionality)
+cardToString :: Card -> String
+cardToString (Card (Numeric n) suit) = show n ++ " " ++ show suit
+cardToString (Card rank suit) = [head $ show rank] ++ " " ++ show suit
 
+   
 implementation = Interface
     { iEmpty    = empty
       , iFullDeck = fullDeck
@@ -188,6 +198,7 @@ implementation = Interface
       , iDraw     = draw
       , iPlayBank = playBank
       , iShuffle  = shuffle'
+      , iHandToString = handToString
     }
 
 main :: IO ()

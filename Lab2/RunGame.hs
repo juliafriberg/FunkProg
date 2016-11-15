@@ -14,6 +14,7 @@ data Interface = Interface
   , iDraw     :: Hand -> Hand -> (Hand, Hand)
   , iPlayBank :: Hand -> Hand
   , iShuffle  :: StdGen -> Hand -> Hand
+  , iHandToString :: Hand -> String
   }
 
 -- | A type of players.
@@ -31,6 +32,8 @@ runGame i = do
 gameLoop :: Interface -> Hand -> Hand -> IO ()
 gameLoop i deck guest = do
   putStrLn ("Your current score: " ++ show (iValue i guest))
+  putStrLn "Your hand: "
+  putStrLn (iHandToString i guest)
   if iGameOver i guest then do
     finish i deck guest
    else do
@@ -46,6 +49,8 @@ gameLoop i deck guest = do
 finish :: Interface -> Hand -> Hand -> IO ()
 finish i deck guest = do
   putStrLn ("The bank's final score: " ++ show (iValue i bank))
+  putStrLn ("The bank's hand: ")
+  putStrLn (iHandToString i bank)
   putStrLn ("Winner: " ++ show (iWinner i guest bank))
   where
   bank = iPlayBank i deck
