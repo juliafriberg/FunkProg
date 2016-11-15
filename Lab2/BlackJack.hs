@@ -78,7 +78,7 @@ winner guestHand bankHand
 
 
 -- PART B
-
+-- Task 4
 -- Given two hands, <+ puts the first one on top of the second one
 (<+) :: Hand -> Hand -> Hand
 Empty <+ hand2 = hand2
