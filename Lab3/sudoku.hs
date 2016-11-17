@@ -1,7 +1,8 @@
 import Test.QuickCheck
+import Data.Maybe
 
 data Sudoku = Sudoku { rows :: [[Maybe Int]] }
-			  deriving (Eq, Show)
+        deriving (Eq, Show)
 type Block = [Maybe Int]
 type Pos = (Int,Int)
 
@@ -33,10 +34,11 @@ allBlankSudoku = Sudoku [[n | x<-[1..9]] | x<-[1..9]]
 
 -- A2
 isSudoku :: Sudoku -> Bool
-isSudoku sudoku = (length $ rows sudoku) == 9 && (and (map (\x -> length x == 9) $ rows sudoku))
-
-lengthNine :: [Maybe Int] -> Bool
-lengthNine x = length x == 9
+isSudoku sudoku = (length $ rows sudoku) == 9 
+                  && (and (map (\x -> length x == 9) $ rows sudoku))
+                  && (and (map (\x -> 
+                     (and (map (\y -> (isNothing y || (fromJust y < 10 && fromJust y > 0))) x))) 
+                     $ rows sudoku))  
 
 -- A3
 isSolved :: Sudoku -> Bool
