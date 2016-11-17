@@ -33,7 +33,7 @@ allBlankSudoku = Sudoku [[n | x<-[1..9]] | x<-[1..9]]
 
 -- A2
 isSudoku :: Sudoku -> Bool
-isSudoku sudoku = (length $ rows sudoku) == 9 && (and (map (lengthNine) $ rows sudoku))
+isSudoku sudoku = (length $ rows sudoku) == 9 && (and (map (\x -> length x == 9) $ rows sudoku))
 
 lengthNine :: [Maybe Int] -> Bool
 lengthNine x = length x == 9
