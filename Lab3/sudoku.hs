@@ -80,6 +80,8 @@ printSudoku sudoku =
 
 
 -- B2
+-- readSudoku file reads from the file, and either delivers it, or stops
+-- if the file did not contain a sudoku
 readSudoku :: FilePath -> IO Sudoku
 readSudoku filePath = 
   do 
@@ -88,14 +90,25 @@ readSudoku filePath =
     let sudoku = (Sudoku [[if c == '.' then Nothing else Just (digitToInt c)| c <- row] | row <- rows])
     if isSudoku sudoku then return sudoku
       else error "Not a soduko!"
+
 -- Assignment C
 
 -- C1
+-- cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Maybe Int)
-cell = undefined
+cell = frequency [(1,rNothing),(9,rJust)]
+  where
+    rNothing = Nothing
+    rJust = do 
+         n <- choose(1,9)
+         return $ Just n
 
--- C2. Make Sudokus an instance of the class Arbitrary.
---instance Arbitrary Sudoku where
+-- C2
+-- an instance for generating Arbitrary Sudokus
+instance Arbitrary Sudoku where
+  arbitrary =
+    do rows <- sequence [ sequence [ cell | j <- [1..9] ] | i <- [1..9] ]
+       return (Sudoku rows)
 
 -- C3
 prop_Sudoku :: Sudoku -> Bool
