@@ -81,8 +81,13 @@ printSudoku sudoku =
 
 -- B2
 readSudoku :: FilePath -> IO Sudoku
-readSudoku = undefined
-
+readSudoku filePath = 
+  do 
+    rowList <- readFile filePath
+    let rows = lines rowList
+    let sudoku = (Sudoku [[if c == '.' then Nothing else Just (digitToInt c)| c <- row] | row <- rows])
+    if isSudoku sudoku then return sudoku
+      else error "Not a soduko!"
 -- Assignment C
 
 -- C1
