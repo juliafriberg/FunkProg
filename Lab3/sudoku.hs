@@ -75,8 +75,9 @@ isSolved sudoku = (and (map (\x ->
 -- printSudoku sud prints a representation of the sudoku sud on the screen
 printSudoku :: Sudoku -> IO ()
 printSudoku sudoku = 
-  if digit print digit
-    els print .
+  do 
+    putStr (unlines [[if isNothing x then '.' else intToDigit (fromJust x) | x <- y ] | y <- (rows sudoku)])
+
 
 -- B2
 readSudoku :: FilePath -> IO Sudoku
