@@ -1,6 +1,7 @@
 import Test.QuickCheck
 import Data.Maybe
 import Data.Char
+import Data.List
 
 data Sudoku = Sudoku { rows :: [[Maybe Int]] }
         deriving (Eq, Show)
@@ -98,7 +99,7 @@ readSudoku filePath =
 cell :: Gen (Maybe Int)
 cell = frequency [(1,rNothing),(9,rJust)]
   where
-    rNothing = Nothing
+    rNothing = elements [Nothing]
     rJust = do 
          n <- choose(1,9)
          return $ Just n
@@ -112,13 +113,16 @@ instance Arbitrary Sudoku where
 
 -- C3
 prop_Sudoku :: Sudoku -> Bool
-prop_Sudoku = undefined
+prop_Sudoku sudoku = isSudoku sudoku  
 
 -- Assignment D
 
 -- D1
 isOkayBlock :: Block -> Bool
-isOkayBlock = undefined
+isOkayBlock block = length nbrList == length (nub nbrList)
+  where 
+    nbrList = [x | x <- block, not (isNothing x)]
+
 
 -- D2
 blocks :: Sudoku -> [Block]
