@@ -5,6 +5,7 @@ cabal-dev
 *.hi
 *.chi
 *.chs.h
+.DS_Store
 *.dyn_o
 *.dyn_hi
 .hpc
