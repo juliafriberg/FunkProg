@@ -1,5 +1,6 @@
 import Test.QuickCheck
 import Data.Maybe
+import Data.Char
 
 data Sudoku = Sudoku { rows :: [[Maybe Int]] }
         deriving (Eq, Show)
@@ -23,16 +24,35 @@ example =
     n = Nothing
     j = Just
 
+solved :: Sudoku
+solved =
+    Sudoku
+      [ [j 1,j 2,j 3,j 4,j 5,j 6,j 7,j 8,j 9]
+      , [j 4,j 5,j 6,j 7,j 8,j 9,j 1,j 2,j 3]
+      , [j 7,j 8,j 9,j 1,j 2,j 3,j 4,j 5,j 6]
+      , [j 2,j 1,j 4,j 3,j 6,j 5,j 8,j 9,j 7]
+      , [j 3,j 6,j 5,j 8,j 9,j 7,j 2,j 1,j 4]
+      , [j 8,j 9,j 7,j 2,j 1,j 4,j 3,j 6,j 5]
+      , [j 5,j 3,j 1,j 6,j 4,j 2,j 9,j 7,j 8]
+      , [j 6,j 4,j 2,j 9,j 7,j 8,j 5,j 3,j 1]
+      , [j 9,j 7,j 8,j 5,j 3,j 1,j 6,j 4,j 2]
+      ]
+  where
+    n = Nothing
+    j = Just
+
 -- Lab3A
 
 --Assignment A
 
 -- A1
+-- allBlankSudoku is a sudoku with just blanks
 allBlankSudoku :: Sudoku
 allBlankSudoku = Sudoku [[n | x<-[1..9]] | x<-[1..9]]
                  where n = Nothing
 
 -- A2
+-- isSudoku sud checks if sud is really a valid representation of a sudoku
 isSudoku :: Sudoku -> Bool
 isSudoku sudoku = (length $ rows sudoku) == 9 
                   && (and (map (\x -> length x == 9) $ rows sudoku))
@@ -40,15 +60,23 @@ isSudoku sudoku = (length $ rows sudoku) == 9
                      (and (map (\y -> (isNothing y || (fromJust y < 10 && fromJust y > 0))) x))) 
                      $ rows sudoku))  
 
+-- isTrueForAll :: (a -> b) -> 
+
 -- A3
+-- isSolved sud checks if sud is already solved, i.e. there are no blanks
 isSolved :: Sudoku -> Bool
-isSolved = undefined
+isSolved sudoku = (and (map (\x -> 
+                  (and (map (\y -> not (isNothing y)) x))) 
+                  $ rows sudoku))
 
 -- Assignment B
 
 -- B1 
+-- printSudoku sud prints a representation of the sudoku sud on the screen
 printSudoku :: Sudoku -> IO ()
-printSudoku = undefined
+printSudoku sudoku = 
+  if digit print digit
+    els print .
 
 -- B2
 readSudoku :: FilePath -> IO Sudoku
