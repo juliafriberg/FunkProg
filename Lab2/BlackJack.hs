@@ -97,21 +97,15 @@ prop_size_onTopOf hand1 hand2 =
 
 -- Creates a full deck with 52 cards
 fullDeck :: Hand
-fullDeck = listToHand (cardsInSuit Hearts) 
-        <+ listToHand (cardsInSuit Diamonds) 
-        <+ listToHand (cardsInSuit Spades) 
-        <+ listToHand (cardsInSuit Clubs)
+fullDeck = (cardsInSuit Hearts) 
+        <+ (cardsInSuit Diamonds) 
+        <+ (cardsInSuit Spades) 
+        <+ (cardsInSuit Clubs)
 
--- Creates a list of all cards in a suit
-cardsInSuit :: Suit -> [Card]
-cardsInSuit suit = [Card (Numeric a) suit | a <- [2..10]] 
-                ++ [Card val suit | val <- [Jack, Queen, King, Ace]]
-
--- Creates a hand from a list of cards
-listToHand :: [Card] -> Hand
-listToHand [] = Empty
-listToHand [card] = Add card Empty
-listToHand (card:xs) = Add card (listToHand xs)
+-- Creates a hand with all cards in a suit
+cardsInSuit :: Suit -> Hand
+cardsInSuit suit = foldr Add Empty ([Card (Numeric a) suit | a <- [2..10]] 
+                ++ [Card val suit | val <- [Jack, Queen, King, Ace]])
 
 
 -- Tests the number of cards in the full deck
@@ -121,33 +115,26 @@ prop_size_FullDeck = size fullDeck == 52
 
 -- Tests the number of cards in a suit
 prop_size_cardsInSuit :: Suit -> Bool
-prop_size_cardsInSuit suit = length (cardsInSuit suit) == 13
-
--- Tests that the number of cards in the list is the same as in the hand
-prop_size_listToHand :: [Card] -> Bool
-prop_size_listToHand cards = size (listToHand cards) == length cards
+prop_size_cardsInSuit suit = size (cardsInSuit suit) == 13
 
 
 -- Draws the first card of the deck
 draw :: Hand -> Hand -> (Hand,Hand)
-draw Empty _ = error "draw: The deck is empty."
-draw (Add firstCard deck) hand = (deck, Add firstCard hand)
+draw deck hand = (deck', (Add card hand))
+  where (deck', card) = removeCardAtIndex deck 1
 
 -- Plays for the bank
 playBank :: Hand -> Hand
 playBank deck = playBank' deck Empty
-
--- Follows the rules for the bank
-playBank' :: Hand -> Hand -> Hand
-playBank' deck bankHand 
-    | value bankHand' > 15 = bankHand'
-    | otherwise = playBank' deck' bankHand'
-    where (deck',bankHand') = draw deck bankHand
+  where 
+    playBank' deck bankHand 
+      | value bankHand' > 15 = bankHand'
+      | otherwise = playBank' deck' bankHand'
+      where (deck',bankHand') = draw deck bankHand
 
 -- Shuffles the hand given and returns a shuffled hand
 shuffle' :: StdGen -> Hand -> Hand
 shuffle' _ Empty = Empty
-shuffle' _ (Add card Empty) = Add card Empty
 shuffle' g hand  =  Add card (shuffle' g' hand')
     where 
         (index, g') = randomR (0, size hand -1) g
@@ -158,7 +145,8 @@ removeCardAtIndex :: Hand -> Integer -> (Hand,Card)
 removeCardAtIndex Empty _ = error "removeCardAtIndex: The deck is empty"
 removeCardAtIndex (Add card hand) 0  = (hand,card)
 removeCardAtIndex (Add card hand) index 
-  | index > size hand || index < 0   = error "removeCardAtIndex: invalid idx"
+  | index > size hand || index < 0   = error 
+                              "removeCardAtIndex: index outside of deck"
   | otherwise                        = (Add card hand', card')
   where (hand', card') = removeCardAtIndex hand (index-1)
 

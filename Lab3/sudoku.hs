@@ -61,8 +61,6 @@ isSudoku sudoku = (length $ rows sudoku) == 9
                      (and (map (\y -> (isNothing y || (fromJust y < 10 && fromJust y > 0))) x))) 
                      $ rows sudoku))  
 
--- isTrueForAll :: (a -> b) -> 
-
 -- A3
 -- isSolved sud checks if sud is already solved, i.e. there are no blanks
 isSolved :: Sudoku -> Bool
@@ -112,12 +110,14 @@ instance Arbitrary Sudoku where
        return (Sudoku rows)
 
 -- C3
+-- tests if a sudoku is a sudoku
 prop_Sudoku :: Sudoku -> Bool
 prop_Sudoku sudoku = isSudoku sudoku  
 
 -- Assignment D
 
 -- D1
+-- Tests if a block is ok, i.e. does not contain the same digit twice
 isOkayBlock :: Block -> Bool
 isOkayBlock block = length nbrList == length (nub nbrList)
   where 
@@ -125,16 +125,25 @@ isOkayBlock block = length nbrList == length (nub nbrList)
 
 
 -- D2
+-- Given a sudoku, all blocks are returned. This is 9 rows, 9 columns and 9 3*3 squares.
 blocks :: Sudoku -> [Block]
-blocks = undefined
+blocks sudoku = rowsInSudoku ++ columnsInSudoku ++ getSquares (rows sudoku)
+    where 
+        rowsInSudoku = [x | x <- (rows sudoku)]
+        columnsInSudoku =  [x | x <- transpose (rows sudoku)]
+        squaresInSudoku = getSquares (rows sudoku)
+        getSquares [] = []
+        getSquares xs = getSquaresForRows (transpose (take 3 xs)) ++ getSquares (drop 3 xs)
+        getSquaresForRows [] = []
+        getSquaresForRows xs = [concat (take 3 xs)] ++ getSquaresForRows (drop 3 xs)
 
-
+prop_sudoku_blocks :: Sudoku -> Bool
+prop_sudoku_blocks = undefined
 -- D3
 isOkay :: Sudoku -> Bool
 isOkay = undefined
 
 -- Lab3B
-
 -- Assignment E
 
 -- E1
