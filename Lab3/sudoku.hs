@@ -56,17 +56,19 @@ allBlankSudoku = Sudoku [[n | x<-[1..9]] | x<-[1..9]]
 -- isSudoku sud checks if sud is really a valid representation of a sudoku
 isSudoku :: Sudoku -> Bool
 isSudoku sudoku = (length $ rows sudoku) == 9 
-                  && (and (map (\x -> length x == 9) $ rows sudoku))
-                  && (and (map (\x -> 
-                     (and (map (\y -> (isNothing y || (fromJust y < 10 && fromJust y > 0))) x))) 
-                     $ rows sudoku))  
+                  && and [length x == 9 | x <- rows sudoku]
+                  && checkAllElements (\y -> (isNothing y || (fromJust y < 10 && fromJust y > 0 ))) sudoku
+
+checkAllElements :: (Maybe Int -> Bool) -> Sudoku -> Bool
+checkAllElements f sudoku = (and (map (\x -> 
+                  (and (map f x))) 
+                  $ rows sudoku))
 
 -- A3
 -- isSolved sud checks if sud is already solved, i.e. there are no blanks
 isSolved :: Sudoku -> Bool
-isSolved sudoku = (and (map (\x -> 
-                  (and (map (\y -> not (isNothing y)) x))) 
-                  $ rows sudoku))
+isSolved sudoku = checkAllElements (\y -> not (isNothing y)) sudoku
+                  
 
 -- Assignment B
 
@@ -143,7 +145,7 @@ prop_sudoku_blocks sudoku = (and [length x == 9 | x <- blocksInSudoku] ) &&  len
   
 -- D3
 isOkay :: Sudoku -> Bool
-isOkay = undefined
+isOkay sudoku = (and [isOkayBlock x | x <- blocks sudoku])
 
 -- Lab3B
 -- Assignment E
