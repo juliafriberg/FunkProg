@@ -127,7 +127,7 @@ isOkayBlock block = length nbrList == length (nub nbrList)
 -- D2
 -- Given a sudoku, all blocks are returned. This is 9 rows, 9 columns and 9 3*3 squares.
 blocks :: Sudoku -> [Block]
-blocks sudoku = rowsInSudoku ++ columnsInSudoku ++ getSquares (rows sudoku)
+blocks sudoku = rowsInSudoku ++ columnsInSudoku ++ squaresInSudoku
     where 
         rowsInSudoku = [x | x <- (rows sudoku)]
         columnsInSudoku =  [x | x <- transpose (rows sudoku)]
@@ -138,7 +138,9 @@ blocks sudoku = rowsInSudoku ++ columnsInSudoku ++ getSquares (rows sudoku)
         getSquaresForRows xs = [concat (take 3 xs)] ++ getSquaresForRows (drop 3 xs)
 
 prop_sudoku_blocks :: Sudoku -> Bool
-prop_sudoku_blocks = undefined
+prop_sudoku_blocks sudoku = (and [length x == 9 | x <- blocksInSudoku] ) &&  length blocksInSudoku == 9*3
+  where blocksInSudoku = blocks sudoku
+  
 -- D3
 isOkay :: Sudoku -> Bool
 isOkay = undefined
