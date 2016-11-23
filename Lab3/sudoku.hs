@@ -55,19 +55,18 @@ allBlankSudoku = Sudoku [[n | x<-[1..9]] | x<-[1..9]]
 -- A2
 -- isSudoku sud checks if sud is really a valid representation of a sudoku
 isSudoku :: Sudoku -> Bool
-isSudoku sudoku = (length $ rows sudoku) == 9 
+isSudoku sudoku = length (rows sudoku) == 9 
                   && and [length x == 9 | x <- rows sudoku]
-                  && checkAllElements (\y -> (isNothing y || (fromJust y < 10 && fromJust y > 0 ))) sudoku
+                  && checkAllElements (\y -> isNothing y || 
+                    (fromJust y < 10 && fromJust y > 0 )) sudoku
 
 checkAllElements :: (Maybe Int -> Bool) -> Sudoku -> Bool
-checkAllElements f sudoku = (and (map (\x -> 
-                  (and (map f x))) 
-                  $ rows sudoku))
+checkAllElements f sudoku = and [all f x | x <- rows sudoku]
 
 -- A3
 -- isSolved sud checks if sud is already solved, i.e. there are no blanks
 isSolved :: Sudoku -> Bool
-isSolved sudoku = checkAllElements (\y -> not (isNothing y)) sudoku
+isSolved = checkAllElements isJust
                   
 
 -- Assignment B
@@ -76,8 +75,7 @@ isSolved sudoku = checkAllElements (\y -> not (isNothing y)) sudoku
 -- printSudoku sud prints a representation of the sudoku sud on the screen
 printSudoku :: Sudoku -> IO ()
 printSudoku sudoku = 
-  do 
-    putStr (unlines [[if isNothing x then '.' else intToDigit (fromJust x) | x <- y ] | y <- (rows sudoku)])
+    putStr (unlines [[maybe '.' intToDigit x | x <- y ] | y <- rows sudoku])
 
 
 -- B2
@@ -88,7 +86,7 @@ readSudoku filePath =
   do 
     rowList <- readFile filePath
     let rows = lines rowList
-    let sudoku = (Sudoku [[if c == '.' then Nothing else Just (digitToInt c)| c <- row] | row <- rows])
+    let sudoku = Sudoku [[if c == '.' then Nothing else Just (digitToInt c) | c <- row] | row <- rows]
     if isSudoku sudoku then return sudoku
       else error "Not a soduko!"
 
@@ -114,7 +112,7 @@ instance Arbitrary Sudoku where
 -- C3
 -- tests if a sudoku is a sudoku
 prop_Sudoku :: Sudoku -> Bool
-prop_Sudoku sudoku = isSudoku sudoku  
+prop_Sudoku = isSudoku   
 
 -- Assignment D
 
@@ -123,29 +121,30 @@ prop_Sudoku sudoku = isSudoku sudoku
 isOkayBlock :: Block -> Bool
 isOkayBlock block = length nbrList == length (nub nbrList)
   where 
-    nbrList = [x | x <- block, not (isNothing x)]
+    nbrList = [x | x <- block, isJust x]
 
 
 -- D2
--- Given a sudoku, all blocks are returned. This is 9 rows, 9 columns and 9 3*3 squares.
+-- Given a sudoku, all blocks are returned. 
+-- This is 9 rows, 9 columns and 9 3*3 squares.
 blocks :: Sudoku -> [Block]
 blocks sudoku = rowsInSudoku ++ columnsInSudoku ++ squaresInSudoku
     where 
-        rowsInSudoku = [x | x <- (rows sudoku)]
-        columnsInSudoku =  [x | x <- transpose (rows sudoku)]
-        squaresInSudoku = getSquares (rows sudoku)
-        getSquares [] = []
-        getSquares xs = getSquaresForRows (transpose (take 3 xs)) ++ getSquares (drop 3 xs)
-        getSquaresForRows [] = []
-        getSquaresForRows xs = [concat (take 3 xs)] ++ getSquaresForRows (drop 3 xs)
+        rowsInSudoku = rows sudoku
+        columnsInSudoku = transpose rowsInSudoku
+        squaresInSudoku = [concat [take 3 (drop x row) | 
+          row <- take 3 (drop y (rows sudoku))] | x <- [0,3,6], y <- [0,3,6]]
+
+
 
 prop_sudoku_blocks :: Sudoku -> Bool
-prop_sudoku_blocks sudoku = (and [length x == 9 | x <- blocksInSudoku] ) &&  length blocksInSudoku == 9*3
+prop_sudoku_blocks sudoku = and [length x == 9 | x <- blocksInSudoku]  
+      &&  length blocksInSudoku == 9*3
   where blocksInSudoku = blocks sudoku
   
 -- D3
 isOkay :: Sudoku -> Bool
-isOkay sudoku = (and [isOkayBlock x | x <- blocks sudoku])
+isOkay sudoku = and [isOkayBlock x | x <- blocks sudoku]
 
 -- Lab3B
 -- Assignment E
