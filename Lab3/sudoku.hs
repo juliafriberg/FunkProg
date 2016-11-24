@@ -151,8 +151,12 @@ isOkay sudoku = and [isOkayBlock x | x <- blocks sudoku]
 -- Assignment E
 
 -- E1
+-- Given a sudokureturns a list of the positions in the sudoku that are still blank
 blanks :: Sudoku -> [Pos]
-blanks = undefined
+blanks sudoku = [(x,y) | x <- [0..8], y <- [0..8], isNothing ((rows sudoku !! x) !! y)]
+
+prop_allBlank :: Sudoku -> Bool
+prop_allBlank sudoku = and [isNothing ((rows sudoku !! row) !! col) | (row,col) <- blanks sudoku]
 
 -- E2
 (!!=) :: [a] -> (Int,a) -> [a]
