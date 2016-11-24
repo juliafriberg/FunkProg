@@ -160,7 +160,18 @@ prop_allBlank sudoku = and [isNothing ((rows sudoku !! row) !! col) | (row,col) 
 
 -- E2
 (!!=) :: [a] -> (Int,a) -> [a]
-(!!=) = undefined
+xs !!= (index, newX) 
+    | index >= length xs || index < 0 = error "Index outside of list"
+    | otherwise = [if x == index then newX else xs !! x | x <- [0..(length xs-1)]]
+
+prop_lengthSwap :: [a] -> (Int, a) -> Property
+prop_lengthSwap xs (index, newX) = index >= 0 && index < length xs ==> (length xs == length (xs !!= (index, newX)))
+
+prop_swap :: Eq a => [a] -> (Int, a) -> Property
+prop_swap xs (index, newX) = index >= 0 && index < length xs ==> take (index-1) xs == take (index-1) newList && drop (index+1) xs == drop (index+1) newList
+  where 
+    newList = xs !!= (index, newX)
+
 
 -- E3
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
