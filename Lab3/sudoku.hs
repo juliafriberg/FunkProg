@@ -175,7 +175,7 @@ prop_swap xs (index, newX) = index >= 0 && index < length xs ==> take (index-1) 
 
 -- E3
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
-update = undefined
+update sudoku (row,col) val = Sudoku (rows sudoku !!= (row, (rows sudoku !! row) !!= (col, val)))
 
 
 -- E4
