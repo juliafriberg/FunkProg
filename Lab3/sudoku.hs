@@ -177,6 +177,7 @@ prop_swap xs (index, newX) = index >= 0 && index < length xs ==> take (index-1) 
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update sudoku (row,col) val = Sudoku (rows sudoku !!= (row, (rows sudoku !! row) !!= (col, val)))
 
+prop_update sudoku (row,col) val = row >= 0 && row <= 8 && col >= 0 && col <= 8 ==> ((rows $ update sudoku (row,col) val) !! row) !! col == val
 
 -- E4
 candidates :: Sudoku -> Pos -> [Int]
