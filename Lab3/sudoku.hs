@@ -181,7 +181,7 @@ prop_update sudoku (row,col) val = row >= 0 && row <= 8 && col >= 0 && col <= 8 
 
 -- E4
 candidates :: Sudoku -> Pos -> [Int]
-candidates sudoku (row, col) = notInRow `intersect` notInCol 
+candidates sudoku (row, col) = notInRow `intersect` notInCol `intersect` notInSquare
     where notInList xs = [fromJust x | x <- (([Just x | x <- [1..9]] ++ [Nothing]) \\ xs)]
           notInRow = notInList (rows sudoku !! row)
           notInCol = notInList ((transpose (rows sudoku)) !! col)
@@ -189,14 +189,45 @@ candidates sudoku (row, col) = notInRow `intersect` notInCol
           getSquare x y = concat [take 3 (drop (getInterval y) row) | row <- take 3 (drop (getInterval x) (rows sudoku))]
           getInterval x 
                   | x < 3 = 0
-                  | x < 6 = 3
-                  | x < 9 = 6
+                  | x > 2 && x < 6 = 3
+                  | x > 5 && x < 9 = 6
+
+-- Does not work for random generated sudokus. They are not okay sudokus. 
+prop_candidates :: Sudoku -> Pos -> Bool
+prop_candidates sudoku pos = isOkay sud && isSudoku sud 
+    where
+      sud = update sudoku pos (Just (head $ candidates sudoku pos))
 
 -- Assignment F
 
 -- F1
 solve :: Sudoku -> Maybe Sudoku
-solve = undefined
+solve sudoku 
+    | isSudoku sudoku && isOkay sudoku = solve' sudoku
+    | otherwise = Nothing
+    where
+      solve' sudoku 
+        | length blankCells == 0 = Just sudoku
+        | length cand == 0 = Nothing
+        | otherwise = 
+          do 
+            solve' (update sudoku pos $ Just (head cand))
+        where
+          pos = head blankCells
+          cand = candidates sudoku pos
+          blankCells = blanks sudoku
+
+
+      {- solve' sudoku
+
+        | length blankCells == 0 = Just sudoku
+        | otherwise = solve' (update sudoku pos (head $ candidates pos))
+        where
+          pos = head blankCells
+          blankCells = blanks sudoku
+-}
+
+
 
 -- F2
 readAndSolve :: FilePath -> IO ()
