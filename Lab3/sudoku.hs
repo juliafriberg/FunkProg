@@ -133,8 +133,8 @@ blocks sudoku = rowsInSudoku ++ columnsInSudoku ++ squaresInSudoku
     where 
         rowsInSudoku = rows sudoku
         columnsInSudoku = transpose rowsInSudoku
-        squaresInSudoku = [concat [take 3 (drop x row) | 
-          row <- take 3 (drop y (rows sudoku))] | x <- [0,3,6], y <- [0,3,6]]
+        squaresInSudoku = [concat [take 3 (drop x row) 
+                  | row <- take 3 (drop y (rows sudoku))] | x <- [0,3,6], y <- [0,3,6]]
 
 
 
@@ -181,7 +181,16 @@ prop_update sudoku (row,col) val = row >= 0 && row <= 8 && col >= 0 && col <= 8 
 
 -- E4
 candidates :: Sudoku -> Pos -> [Int]
-candidates = undefined
+candidates sudoku (row, col) = notInRow `intersect` notInCol 
+    where notInList xs = [fromJust x | x <- (([Just x | x <- [1..9]] ++ [Nothing]) \\ xs)]
+          notInRow = notInList (rows sudoku !! row)
+          notInCol = notInList ((transpose (rows sudoku)) !! col)
+          notInSquare = notInList (getSquare row col)
+          getSquare x y = concat [take 3 (drop (getInterval y) row) | row <- take 3 (drop (getInterval x) (rows sudoku))]
+          getInterval x 
+                  | x < 3 = 0
+                  | x < 6 = 3
+                  | x < 9 = 6
 
 -- Assignment F
 
