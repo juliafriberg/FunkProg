@@ -133,8 +133,9 @@ blocks sudoku = rowsInSudoku ++ columnsInSudoku ++ squaresInSudoku
     where 
         rowsInSudoku = rows sudoku
         columnsInSudoku = transpose rowsInSudoku
-        squaresInSudoku = [concat [take 3 (drop x row) 
-                  | row <- take 3 (drop y (rows sudoku))] | x <- [0,3,6], y <- [0,3,6]]
+        squaresInSudoku = [concat [take 3 (drop (3*x) row) 
+                  | row <- take 3 (drop (3*y) (rows sudoku))] 
+                  | y <- [0,1,2], x <- [0,1,2]]
 
 
 
@@ -153,10 +154,12 @@ isOkay sudoku = and [isOkayBlock x | x <- blocks sudoku]
 -- E1
 -- Given a sudokureturns a list of the positions in the sudoku that are still blank
 blanks :: Sudoku -> [Pos]
-blanks sudoku = [(x,y) | x <- [0..8], y <- [0..8], isNothing ((rows sudoku !! x) !! y)]
+blanks sudoku = [(x,y) | x <- [0..8], y <- [0..8], 
+                        isNothing ((rows sudoku !! x) !! y)]
 
 prop_allBlank :: Sudoku -> Bool
-prop_allBlank sudoku = and [isNothing ((rows sudoku !! row) !! col) | (row,col) <- blanks sudoku]
+prop_allBlank sudoku = and [isNothing ((rows sudoku !! row) !! col) 
+                              | (row,col) <- blanks sudoku]
 
 -- E2
 (!!=) :: [a] -> (Int,a) -> [a]
@@ -175,18 +178,23 @@ prop_swap xs (index, newX) = index >= 0 && index < length xs ==> take (index-1) 
 
 -- E3
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
-update sudoku (row,col) val = Sudoku (rows sudoku !!= (row, (rows sudoku !! row) !!= (col, val)))
+update sudoku (row,col) val = 
+    Sudoku (rows sudoku !!= (row, (rows sudoku !! row) !!= (col, val)))
 
 prop_update sudoku (row,col) val = row >= 0 && row <= 8 && col >= 0 && col <= 8 ==> ((rows $ update sudoku (row,col) val) !! row) !! col == val
 
 -- E4
 candidates :: Sudoku -> Pos -> [Int]
-candidates sudoku (row, col) = notInRow `intersect` notInCol `intersect` notInSquare
-    where notInList xs = [fromJust x | x <- (([Just x | x <- [1..9]] ++ [Nothing]) \\ xs)]
+candidates sudoku (row, col) =  notInRow `intersect` 
+                                notInCol `intersect` 
+                                notInSquare
+    where notInList xs = [fromJust x | x <- (([Just x 
+                                | x <- [1..9]] ++ [Nothing]) \\ xs)]
           notInRow = notInList (rows sudoku !! row)
           notInCol = notInList ((transpose (rows sudoku)) !! col)
           notInSquare = notInList (getSquare row col)
-          getSquare x y = concat [take 3 (drop (getInterval y) row) | row <- take 3 (drop (getInterval x) (rows sudoku))]
+          getSquare x y = concat [take 3 (drop (getInterval y) row) 
+            | row <- take 3 (drop (getInterval x) (rows sudoku))]
           getInterval x 
                   | x < 3 = 0
                   | x < 6 = 3
@@ -203,27 +211,15 @@ prop_candidates sudoku pos = isOkay sud && isSudoku sud
 -- F1
 solve :: Sudoku -> Maybe Sudoku
 solve sudoku 
-    | isSudoku sudoku && isOkay sudoku = solve' sudoku
+    | isSudoku sudoku && isOkay sudoku = solve' sudoku (blanks sudoku)
     | otherwise = Nothing
     where
-      solve' sudoku 
-        | length blankCells == 0 = Just sudoku
-        | length cand == 0 = Nothing
-        | otherwise = [solve' (update example (1,2) (Just candidate)) | candidate <- (candidates example (1,2))]
-        where
-          pos = head blankCells
-          cand = candidates sudoku pos
-          blankCells = blanks sudoku
+      solve' sud [] = Just sud
+      solve' sud (blank:blanks) = 
+        listToMaybe $ catMaybes 
+        [solve' (update sud blank (Just candidate)) blanks 
+          | candidate <- candidates sud blank]
 
-
-      {- solve' sudoku
-
-        | length blankCells == 0 = Just sudoku
-        | otherwise = solve' (update sudoku pos (head $ candidates pos))
-        where
-          pos = head blankCells
-          blankCells = blanks sudoku
--}
 
 
 
