@@ -225,7 +225,15 @@ solve sudoku
 
 -- F2
 readAndSolve :: FilePath -> IO ()
-readAndSolve = undefined
+readAndSolve file = 
+  do 
+    sud <- readSudoku file  
+    let solved = solve sud
+    if isNothing solved 
+      then putStrLn "No solution"
+      else printSudoku $ fromJust solved
+
+
 
 -- F3
 isSolutionOf :: Sudoku -> Sudoku -> Bool
