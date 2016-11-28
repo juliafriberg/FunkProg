@@ -189,8 +189,8 @@ candidates sudoku (row, col) = notInRow `intersect` notInCol `intersect` notInSq
           getSquare x y = concat [take 3 (drop (getInterval y) row) | row <- take 3 (drop (getInterval x) (rows sudoku))]
           getInterval x 
                   | x < 3 = 0
-                  | x > 2 && x < 6 = 3
-                  | x > 5 && x < 9 = 6
+                  | x < 6 = 3
+                  | x < 9 = 6
 
 -- Does not work for random generated sudokus. They are not okay sudokus. 
 prop_candidates :: Sudoku -> Pos -> Bool
@@ -209,9 +209,7 @@ solve sudoku
       solve' sudoku 
         | length blankCells == 0 = Just sudoku
         | length cand == 0 = Nothing
-        | otherwise = 
-          do 
-            solve' (update sudoku pos $ Just (head cand))
+        | otherwise = [solve' (update example (1,2) (Just candidate)) | candidate <- (candidates example (1,2))]
         where
           pos = head blankCells
           cand = candidates sudoku pos
