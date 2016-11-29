@@ -237,7 +237,10 @@ readAndSolve file =
 
 -- F3
 isSolutionOf :: Sudoku -> Sudoku -> Bool
-isSolutionOf = undefined
+isSolutionOf sud1 sud2 = isOkay sud1 && isSolved sud1 && 
+    and [x == ((rows sud1 !! row) !! col) 
+      | col <- [0..8], row <- [0..8], 
+        let x = ((rows sud2 !! row) !! col), isJust x]
 
 -- F4
 prop_SolveSound :: Sudoku -> Property
