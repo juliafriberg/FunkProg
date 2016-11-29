@@ -96,9 +96,8 @@ readSudoku filePath =
 -- C1
 -- cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Maybe Int)
-cell = frequency [(1,rNothing),(9,rJust)]
+cell = frequency [(9,return Nothing),(1,rJust)]
   where
-    rNothing = elements [Nothing]
     rJust = do 
          n <- choose(1,9)
          return $ Just n
@@ -167,11 +166,10 @@ xs !!= (index, newX)
     | index >= length xs || index < 0 = error "Index outside of list"
     | otherwise = [if x == index then newX else xs !! x | x <- [0..(length xs-1)]]
 
-prop_lengthSwap :: [a] -> (Int, a) -> Property
-prop_lengthSwap xs (index, newX) = index >= 0 && index < length xs ==> (length xs == length (xs !!= (index, newX)))
 
-prop_swap :: Eq a => [a] -> (Int, a) -> Property
-prop_swap xs (index, newX) = index >= 0 && index < length xs ==> take (index-1) xs == take (index-1) newList && drop (index+1) xs == drop (index+1) newList
+prop_swap :: [Integer] -> (Int, Integer) -> Bool
+prop_swap xs (index, newX) = (length xs == length newList) && 
+    take (index-1) xs == take (index-1) newList && drop (index+1) xs == drop (index+1) newList
   where 
     newList = xs !!= (index, newX)
 
@@ -181,17 +179,18 @@ update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update sudoku (row,col) val = 
     Sudoku (rows sudoku !!= (row, (rows sudoku !! row) !!= (col, val)))
 
-prop_update sudoku (row,col) val = row >= 0 && row <= 8 && col >= 0 && col <= 8 ==> ((rows $ update sudoku (row,col) val) !! row) !! col == val
+prop_update :: Sudoku -> Pos -> Maybe Int -> Property
+prop_update sudoku (row,col) val = row >= 0 && row <= 8 && col >= 0 && col <= 8 ==> (rows (update sudoku (row,col) val) !! row) !! col == val
 
 -- E4
 candidates :: Sudoku -> Pos -> [Int]
 candidates sudoku (row, col) =  notInRow `intersect` 
                                 notInCol `intersect` 
                                 notInSquare
-    where notInList xs = [fromJust x | x <- (([Just x 
-                                | x <- [1..9]] ++ [Nothing]) \\ xs)]
+    where notInList xs = [fromJust x | x <- ([Just x 
+                                | x <- [1..9]] ++ [Nothing]) \\ xs]
           notInRow = notInList (rows sudoku !! row)
-          notInCol = notInList ((transpose (rows sudoku)) !! col)
+          notInCol = notInList (transpose (rows sudoku) !! col)
           notInSquare = notInList (getSquare row col)
           getSquare x y = concat [take 3 (drop (getInterval y) row) 
             | row <- take 3 (drop (getInterval x) (rows sudoku))]
@@ -201,10 +200,15 @@ candidates sudoku (row, col) =  notInRow `intersect`
                   | x < 9 = 6
 
 -- Does not work for random generated sudokus. They are not okay sudokus. 
-prop_candidates :: Sudoku -> Pos -> Bool
-prop_candidates sudoku pos = isOkay sud && isSudoku sud 
+prop_candidates :: Sudoku -> Pos -> Property 
+prop_candidates sudoku pos = isOkay sudoku && isOkayPos pos ==> isOkay sud && isSudoku sud 
     where
       sud = update sudoku pos (Just (head $ candidates sudoku pos))
+
+
+isOkayPos :: Pos -> Bool
+isOkayPos (a,b) = a <= 8 && a >= 0 && b <= 8 && b >= 0 
+
 
 -- Assignment F
 
@@ -229,9 +233,7 @@ readAndSolve file =
   do 
     sud <- readSudoku file  
     let solved = solve sud
-    if isNothing solved 
-      then putStrLn "No solution"
-      else printSudoku $ fromJust solved
+    maybe (putStrLn "No solution") printSudoku solved
 
 
 
@@ -240,9 +242,11 @@ isSolutionOf :: Sudoku -> Sudoku -> Bool
 isSolutionOf sud1 sud2 = isOkay sud1 && isSolved sud1 && 
     and [x == ((rows sud1 !! row) !! col) 
       | col <- [0..8], row <- [0..8], 
-        let x = ((rows sud2 !! row) !! col), isJust x]
+        let x = (rows sud2 !! row) !! col, isJust x]
 
 -- F4
 prop_SolveSound :: Sudoku -> Property
-prop_SolveSound = undefined
+prop_SolveSound sudoku = isSudoku sudoku && isJust sud ==> isSolutionOf (fromJust sud) sudoku
+  where 
+    sud = solve sudoku 
 
