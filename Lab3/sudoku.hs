@@ -179,8 +179,16 @@ update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update sudoku (row,col) val = 
     Sudoku (rows sudoku !!= (row, (rows sudoku !! row) !!= (col, val)))
 
-prop_update :: Sudoku -> Pos -> Maybe Int -> Property
-prop_update sudoku (row,col) val = row >= 0 && row <= 8 && col >= 0 && col <= 8 ==> (rows (update sudoku (row,col) val) !! row) !! col == val
+prop_update :: Sudoku -> Maybe Int -> Property
+prop_update sudoku val = forAll rPos (\pos -> prop_update' sudoku pos val)
+  where prop_update' sudoku (row,col) val = ((rows $ update sudoku (row,col) val) !! row) !! col == val
+
+rPos :: Gen Pos
+rPos = 
+    do 
+      row <- choose(0,8)
+      col <- choose(0,8)
+      return (row, col)
 
 -- E4
 candidates :: Sudoku -> Pos -> [Int]
@@ -200,10 +208,11 @@ candidates sudoku (row, col) =  notInRow `intersect`
                   | x < 9 = 6
 
 -- Does not work for random generated sudokus. They are not okay sudokus. 
-prop_candidates :: Sudoku -> Pos -> Property 
-prop_candidates sudoku pos = isOkay sudoku && isOkayPos pos ==> isOkay sud && isSudoku sud 
+prop_candidates :: Sudoku -> Property 
+prop_candidates sudoku = isOkay sudoku ==> forAll rPos (\pos -> prop_candidates' sudoku pos)
     where
-      sud = update sudoku pos (Just (head $ candidates sudoku pos))
+      prop_candidates' sudoku pos = isOkay sud && isSudoku sud 
+        where sud = update sudoku pos (Just (head $ candidates sudoku pos))
 
 
 isOkayPos :: Pos -> Bool
@@ -249,4 +258,6 @@ prop_SolveSound :: Sudoku -> Property
 prop_SolveSound sudoku = isSudoku sudoku && isJust sud ==> isSolutionOf (fromJust sud) sudoku
   where 
     sud = solve sudoku 
+
+fewerChecks prop = quickCheckWith stdArgs{ maxSuccess = 30 } prop
 
