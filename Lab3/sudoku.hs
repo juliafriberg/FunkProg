@@ -106,7 +106,7 @@ cell = frequency [(9,return Nothing),(1,rJust)]
 -- an instance for generating Arbitrary Sudokus
 instance Arbitrary Sudoku where
   arbitrary =
-    do rows <- sequence [ sequence [ cell | j <- [1..9] ] | i <- [1..9] ]
+    do rows <- sequence [ sequence [ cell | j <- [1..9] ] | i <- [1..9]]
        return (Sudoku rows)
 
 -- C3
@@ -137,13 +137,15 @@ blocks sudoku = rowsInSudoku ++ columnsInSudoku ++ squaresInSudoku
                   | y <- [0,1,2], x <- [0,1,2]]
 
 
-
+-- Tests function blocks by checking that there are 27 blocks 
+-- and that each block consists of 9 elements 
 prop_sudoku_blocks :: Sudoku -> Bool
 prop_sudoku_blocks sudoku = and [length x == 9 | x <- blocksInSudoku]  
       &&  length blocksInSudoku == 9*3
   where blocksInSudoku = blocks sudoku
   
 -- D3
+-- Given a sudoku, checks that the sudoku is a proper sudoku
 isOkay :: Sudoku -> Bool
 isOkay sudoku = and [isOkayBlock x | x <- blocks sudoku]
 
@@ -151,38 +153,52 @@ isOkay sudoku = and [isOkayBlock x | x <- blocks sudoku]
 -- Assignment E
 
 -- E1
--- Given a sudokureturns a list of the positions in the sudoku that are still blank
+-- Given a sudoku, returns a list of the positions in the sudoku 
+-- that are still blank
 blanks :: Sudoku -> [Pos]
 blanks sudoku = [(x,y) | x <- [0..8], y <- [0..8], 
                         isNothing ((rows sudoku !! x) !! y)]
 
+-- Tests the function blanks
 prop_allBlank :: Sudoku -> Bool
 prop_allBlank sudoku = and [isNothing ((rows sudoku !! row) !! col) 
                               | (row,col) <- blanks sudoku]
 
 -- E2
+--  Updates the given list with the new value at the given index.
 (!!=) :: [a] -> (Int,a) -> [a]
 xs !!= (index, newX) 
     | index >= length xs || index < 0 = error "Index outside of list"
-    | otherwise = [if x == index then newX else xs !! x | x <- [0..(length xs-1)]]
+    | otherwise = [if x == index 
+      then newX 
+        else xs !! x | x <- [0..(length xs-1)]]
 
-
+-- Tests the function !!= by checking the length of the given list and the 
+-- length of the list after the swap as well as checks that the other values
+-- in the list are the same after the swap.
 prop_swap :: [Integer] -> (Int, Integer) -> Bool
 prop_swap xs (index, newX) = (length xs == length newList) && 
-    take (index-1) xs == take (index-1) newList && drop (index+1) xs == drop (index+1) newList
+    take (index-1) xs == take (index-1) newList && 
+            drop (index+1) xs == drop (index+1) newList
   where 
     newList = xs !!= (index, newX)
 
 
 -- E3
+-- Updates the given Sudoku at the given position with the new value.
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update sudoku (row,col) val = 
     Sudoku (rows sudoku !!= (row, (rows sudoku !! row) !!= (col, val)))
 
+
+-- Tests the function update
 prop_update :: Sudoku -> Maybe Int -> Property
 prop_update sudoku val = forAll rPos (\pos -> prop_update' sudoku pos val)
-  where prop_update' sudoku (row,col) val = ((rows $ update sudoku (row,col) val) !! row) !! col == val
+  where 
+    prop_update' sudoku (row,col) val = 
+          (rows (update sudoku (row,col) val) !! row) !! col == val
 
+-- Generates a valid position
 rPos :: Gen Pos
 rPos = 
     do 
@@ -191,6 +207,7 @@ rPos =
       return (row, col)
 
 -- E4
+-- Determines which numbers could be legally written into given position.
 candidates :: Sudoku -> Pos -> [Int]
 candidates sudoku (row, col) =  notInRow `intersect` 
                                 notInCol `intersect` 
@@ -207,21 +224,20 @@ candidates sudoku (row, col) =  notInRow `intersect`
                   | x < 6 = 3
                   | x < 9 = 6
 
--- Does not work for random generated sudokus. They are not okay sudokus. 
+-- Tests the function candidates by checking that the sudoku still is 
+-- valid after updating with a candidate
 prop_candidates :: Sudoku -> Property 
-prop_candidates sudoku = isOkay sudoku ==> forAll rPos (\pos -> prop_candidates' sudoku pos)
+prop_candidates sudoku = isOkay sudoku ==> 
+    forAll rPos (prop_candidates' sudoku)
     where
       prop_candidates' sudoku pos = isOkay sud && isSudoku sud 
         where sud = update sudoku pos (Just (head $ candidates sudoku pos))
 
 
-isOkayPos :: Pos -> Bool
-isOkayPos (a,b) = a <= 8 && a >= 0 && b <= 8 && b >= 0 
-
-
 -- Assignment F
 
 -- F1
+-- Solves a sudoku
 solve :: Sudoku -> Maybe Sudoku
 solve sudoku 
     | isSudoku sudoku && isOkay sudoku = solve' sudoku (blanks sudoku)
@@ -233,10 +249,8 @@ solve sudoku
         [solve' (update sud blank (Just candidate)) blanks 
           | candidate <- candidates sud blank]
 
-
-
-
 -- F2
+-- Reads a sudoku from given file, solves it and print the answer.
 readAndSolve :: FilePath -> IO ()
 readAndSolve file = 
   do 
@@ -247,6 +261,7 @@ readAndSolve file =
 
 
 -- F3
+-- Checks that the first sudoku is a solution of the second sudoku 
 isSolutionOf :: Sudoku -> Sudoku -> Bool
 isSolutionOf sud1 sud2 = isOkay sud1 && isSolved sud1 && 
     and [x == ((rows sud1 !! row) !! col) 
@@ -254,10 +269,12 @@ isSolutionOf sud1 sud2 = isOkay sud1 && isSolved sud1 &&
         let x = (rows sud2 !! row) !! col, isJust x]
 
 -- F4
+-- Tests function solve by checking that the solution from solve is a 
+-- valid solution using isSolutionOf
 prop_SolveSound :: Sudoku -> Property
-prop_SolveSound sudoku = isSudoku sudoku && isJust sud ==> isSolutionOf (fromJust sud) sudoku
+prop_SolveSound sudoku = isSudoku sudoku && isJust sud ==> 
+  isSolutionOf (fromJust sud) sudoku
   where 
     sud = solve sudoku 
 
-fewerChecks prop = quickCheckWith stdArgs{ maxSuccess = 30 } prop
 
