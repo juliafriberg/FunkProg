@@ -80,7 +80,7 @@ printSudoku sudoku =
 
 -- B2
 -- readSudoku file reads from the file, and either delivers it, or stops
--- if the file did not contain a sudoku
+-- if the file did not contain a qsudoku
 readSudoku :: FilePath -> IO Sudoku
 readSudoku filePath = 
   do 
