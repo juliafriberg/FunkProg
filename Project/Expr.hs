@@ -1,12 +1,16 @@
 
+import Parsing
+import Data.Char
+import Data.Maybe
 
-data Expr = Lit Float
+
+data Expr = Lit Double
     | Add Expr Expr
     | Mul Expr Expr
     | Var 
     | Sin Expr
     | Cos Expr
-
+    deriving Show
 
 showExpr :: Expr -> String
 showExpr (Lit n) = show n
@@ -24,4 +28,42 @@ showBrackets :: Expr -> String
 showBrackets (Add a b) = "(" ++ showExpr (Add a b) ++ ")" 
 showBrackets (Mul a b) = "(" ++ showExpr (Mul a b) ++ ")" 
 showBrackets e = showExpr e 
--- eval :: Expr -> Double -> Double
+
+
+eval :: Expr -> Double -> Double
+eval (Lit n) _ = n
+eval (Add a b) x = eval a x + eval b x
+eval (Mul a b) x = eval a x * eval b x
+eval (Var) x = x
+eval (Sin a) x = sin (eval a x)
+eval (Cos a) x = cos (eval a x)  
+
+readExpr :: String -> Maybe Expr              
+readExpr s = let s' = filter (not.isSpace) s
+             in case parse expr s' of
+                     Just (e,"") -> Just e
+                     _           -> Nothing
+
+leftAssoc :: (t->t->t) -> Parser t -> Parser sep -> Parser t
+leftAssoc op item sep = do is <- chain item sep
+                           return (foldl1 op is)
+
+expr, term, factor :: Parser Expr
+
+expr = leftAssoc Add term (char '+')
+
+
+term = leftAssoc Mul factor (char '*')
+
+factor = Lit <$> number
+         <|>
+         char '(' *> expr <* char ')'
+
+-- | Parse a number
+number :: Parser Double
+number = do s <- oneOrMore digit
+            return (read s)
+
+variable :: Parser Expr
+variable = do s <- char 'x'
+			return (read s)
