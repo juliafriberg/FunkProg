@@ -11,7 +11,7 @@ data Expr = Lit Double
     | Var 
     | Sin Expr
     | Cos Expr
-    deriving Show
+    deriving (Show, Eq)
 
 showExpr :: Expr -> String
 showExpr (Lit n) = show n
@@ -86,5 +86,6 @@ sinParse = do   s <- string "sin"
 cosParse = do   s <- string "cos"
                 return Cos  
 
-
+prop_ShowReadExpr :: Expr -> Bool
+prop_ShowReadExpr ex = fromJust (readExpr $ showExpr ex) == ex
 
