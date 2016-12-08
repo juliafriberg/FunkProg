@@ -2,6 +2,7 @@
 import Parsing
 import Data.Char
 import Data.Maybe
+import Data.List
 
 
 data Expr = Lit Double
@@ -62,8 +63,9 @@ factor = (Lit <$> number)
 
 -- | Parse a number
 number :: Parser Double
-number = do s <- oneOrMore digit
-            return (read s)
+number = do 
+    s <- (chain (oneOrMore digit) (char '.'))
+    if length s < 3 then return (read (intercalate "." s)) else failure 
 
 -- | Parse a variable
 var :: Parser Expr
@@ -83,3 +85,6 @@ sinParse = do   s <- string "sin"
 
 cosParse = do   s <- string "cos"
                 return Cos  
+
+
+
