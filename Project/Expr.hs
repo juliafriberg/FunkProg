@@ -54,7 +54,11 @@ expr = leftAssoc Add term (char '+')
 
 term = leftAssoc Mul factor (char '*')
 
-factor = (Lit <$> number) <|> var <|> (char '(' *> expr <* char ')')
+factor = (Lit <$> number) 
+        <|> var 
+        <|> sinParse <*> factor 
+        <|> cosParse <*> factor 
+        <|> (char '(' *> expr <* char ')')
 
 -- | Parse a number
 number :: Parser Double
@@ -72,5 +76,10 @@ string ""       = return ""
 string (c:s)    = do 
                     c' <- char c
                     s' <- string s
-                    return (c':s')
+                    return (c':s')  
 
+sinParse = do   s <- string "sin"
+                return Sin  
+
+cosParse = do   s <- string "cos"
+                return Cos  
