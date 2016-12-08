@@ -52,18 +52,25 @@ expr, term, factor :: Parser Expr
 
 expr = leftAssoc Add term (char '+')
 
-
 term = leftAssoc Mul factor (char '*')
 
-factor = Lit <$> number
-         <|>
-         char '(' *> expr <* char ')'
+factor = (Lit <$> number) <|> var <|> (char '(' *> expr <* char ')')
 
 -- | Parse a number
 number :: Parser Double
 number = do s <- oneOrMore digit
             return (read s)
 
-variable :: Parser Expr
-variable = do s <- char 'x'
-			return (read s)
+-- | Parse a variable
+var :: Parser Expr
+var = do s <- char 'x'
+         return Var
+
+-- Parser for strings
+string :: String -> Parser String
+string ""       = return ""
+string (c:s)    = do 
+                    c' <- char c
+                    s' <- string s
+                    return (c':s')
+
