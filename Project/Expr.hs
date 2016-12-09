@@ -3,6 +3,8 @@ import Parsing
 import Data.Char
 import Data.Maybe
 import Data.List
+import System.Random
+import Test.QuickCheck.Gen
 
 
 data Expr = Lit Double
@@ -88,4 +90,24 @@ cosParse = do   s <- string "cos"
 
 prop_ShowReadExpr :: Expr -> Bool
 prop_ShowReadExpr ex = fromJust (readExpr $ showExpr ex) == ex
+
+
+arbExpr :: Int -> Gen Expr
+arbExpr n 
+    | n == 0 = rNum
+    | otherwise = oneof [rAdd, rMul, rVar, rSin, rCos, rNum]
+    where
+        rNum = do
+            a <- choose(0,1000)
+            b <- (fromInteger $ choose(0,9)) `div` 10 
+            return $ Lit (a+b) 
+        rAdd = undefined
+        rMul = undefined 
+        rVar = undefined
+        rSin = undefined
+        rCos = undefined
+
+
+
+
 
