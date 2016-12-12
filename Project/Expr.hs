@@ -3,7 +3,10 @@ import Parsing
 import Data.Char
 import Data.Maybe
 import Data.List
+import Data.String
 import System.Random
+import Control.Monad (replicateM)
+import Test.QuickCheck.Gen
 import Test.QuickCheck
 
 
