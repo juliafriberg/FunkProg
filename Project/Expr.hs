@@ -3,7 +3,10 @@ import Parsing
 import Data.Char
 import Data.Maybe
 import Data.List
+import Data.String
 import System.Random
+import Control.Monad (replicateM)
+
 import Test.QuickCheck.Gen
 
 
@@ -95,19 +98,25 @@ prop_ShowReadExpr ex = fromJust (readExpr $ showExpr ex) == ex
 arbExpr :: Int -> Gen Expr
 arbExpr n 
     | n == 0 = rNum
-    | otherwise = oneof [rAdd, rMul, rVar, rSin, rCos, rNum]
+    | otherwise = undefined -- oneof [srAdd, rMul, rVar, rSin, rCos, rNum]
     where
-        rNum = do
-            a <- choose(0,1000)
-            b <- (fromInteger $ choose(0,9)) `div` 10 
-            return $ Lit (a+b) 
+        rNum = Lit $ read $ show genDouble
+{-
+            -- do
+            -- a <- choose(0,1000)
+            -- b <- (fromInteger $ choose(0,9)) `div` 10 
+            return $ Lit rNum
         rAdd = undefined
         rMul = undefined 
         rVar = undefined
         rSin = undefined
         rCos = undefined
+-}
 
+genDouble :: IO Double
+genDouble = randomRIO (1, 10)
 
+-- genDouble = randomIO :: IO Double
 
 
 
