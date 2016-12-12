@@ -141,6 +141,9 @@ simplifiedMul _ (Lit 0) = (Lit 0)
 simplifiedMul (Lit 1) e = e
 simplifiedMul e (Lit 1) = e
 simplifiedMul (Lit n) (Lit m) = Lit (n*m)
+simplifiedMul (Mul (Lit n) e1) e2 | e1 == e2 = (Mul (Lit n) (Mul e1 e2))
+simplifiedMul (Mul (Lit n) e1) (Mul (Lit m) e2) | e1 == e2 = (Mul (Lit (n*m)) (Mul e1 e2))
+simplifiedMul e1 (Lit n) = (Mul (Lit n) e1)
 simplifiedMul e1 e2 = (Mul e1 e2)
 
 simplifiedSin :: Expr -> Expr
