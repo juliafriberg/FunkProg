@@ -131,7 +131,8 @@ simplifiedAdd :: Expr -> Expr -> Expr
 simplifiedAdd (Lit 0) e = e
 simplifiedAdd e (Lit 0) = e
 simplifiedAdd (Lit n) (Lit m) = Lit (n+m)
--- TODO add with same expression: 5x + 3x = 8x
+simplifiedAdd (Mul (Lit n) e1) e2 | e1 == e2 = (Mul (Lit (n+1)) e1)
+simplifiedAdd (Mul (Lit n) e1) (Mul (Lit m) e2) | e1 == e2 = (Mul (Lit (n+m)) e1)
 simplifiedAdd e1 e2 = (Add e1 e2)
 
 simplifiedMul :: Expr -> Expr -> Expr
