@@ -1,3 +1,4 @@
+module Expr where
 
 import Parsing
 import Data.Char
@@ -6,7 +7,6 @@ import Data.List
 import Data.String
 import System.Random
 import Control.Monad (replicateM)
-import Test.QuickCheck.Gen
 import Test.QuickCheck
 
 
@@ -95,34 +95,6 @@ cosParse = do   s <- string "cos"
 prop_ShowReadExpr :: Expr -> Bool
 prop_ShowReadExpr ex = showExpr (fromJust (readExpr $ showExpr ex)) == showExpr ex
 
-arbExpr :: Int -> Gen Expr
-arbExpr n 
-    | n == 0 = rNum
-    | otherwise = oneof [rAdd, rMul, return Var, rSin, rCos, rNum]
-    where
-        rNum = do
-            a <- elements [1..10 :: Double]
-            b <- elements [1..10 :: Double] 
-            return $ Lit (a) 
-        rAdd = do
-            term1 <- arbExpr size
-            term2 <- arbExpr size
-            return (Add term1 term2)
-        rMul = do
-            factor1 <- arbExpr size
-            factor2 <- arbExpr size
-            return (Mul factor1 factor2) 
-        rSin = do
-            expr <- arbExpr (n-1)
-            return (Sin expr)
-        rCos = do
-            expr <- arbExpr (n-1)
-            return (Cos expr)
-        size = n `div` 2
-
-instance Arbitrary Expr where
-  arbitrary = sized arbExpr
-
 simplify :: Expr -> Expr
 simplify (Add a b) = simplifiedAdd (simplify a) (simplify b)
 simplify (Mul a b) = simplifiedMul (simplify a) (simplify b)
@@ -161,6 +133,7 @@ simplifiedCos e = (Cos e)
 prop_simplify :: Expr -> Double -> Bool
 prop_simplify e d = eval e d == eval (simplify e) d
 
+-- TODO add property for checking if it simplifies enough.
 
 differentiate :: Expr -> Expr
 differentiate e = simplify $ differentiate' (simplify e)
@@ -171,12 +144,4 @@ differentiate e = simplify $ differentiate' (simplify e)
         differentiate' (Cos e) = (Mul (Mul (Lit (-1)) (differentiate' e)) (Sin e))
         differentiate' (Add a b) = (Add (differentiate' a) (differentiate' b))
         differentiate' (Mul a b) = (Add (Mul (differentiate' a) b) (Mul a (differentiate' b))) 
-
-
-
-
-
-
-
--- differentiate (Lit n) Var = (Lit n)
 
