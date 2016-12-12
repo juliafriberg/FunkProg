@@ -16,7 +16,10 @@ data Expr = Lit Double
     | Var 
     | Sin Expr
     | Cos Expr
-    deriving (Show, Eq)
+    deriving (Eq)
+
+instance Show Expr where
+  show = showExpr
 
 showExpr :: Expr -> String
 showExpr (Lit n) = show n
@@ -131,6 +134,7 @@ simplifiedAdd :: Expr -> Expr -> Expr
 simplifiedAdd (Lit 0) e = e
 simplifiedAdd e (Lit 0) = e
 simplifiedAdd (Lit n) (Lit m) = Lit (n+m)
+simplifiedAdd Var Var = (Mul (Lit 2) Var)
 simplifiedAdd (Mul (Lit n) e1) e2 | e1 == e2 = (Mul (Lit (n+1)) e1)
 simplifiedAdd (Mul (Lit n) e1) (Mul (Lit m) e2) | e1 == e2 = (Mul (Lit (n+m)) e1)
 simplifiedAdd e1 e2 = (Add e1 e2)
@@ -153,3 +157,26 @@ simplifiedSin e = (Sin e)
 simplifiedCos :: Expr -> Expr
 simplifiedCos (Lit n) = (Lit (cos n))
 simplifiedCos e = (Cos e)
+
+prop_simplify :: Expr -> Double -> Bool
+prop_simplify e d = eval e d == eval (simplify e) d
+
+
+differentiate :: Expr -> Expr
+differentiate e = simplify $ differentiate' (simplify e)
+    where
+        differentiate' (Lit _) = (Lit 0)
+        differentiate' Var = (Lit 1)
+        differentiate' (Sin e) = (Mul (differentiate' e) (Cos e))
+        differentiate' (Cos e) = (Mul (Mul (Lit (-1)) (differentiate' e)) (Sin e))
+        differentiate' (Add a b) = (Add (differentiate' a) (differentiate' b))
+        differentiate' (Mul a b) = (Add (Mul (differentiate' a) b) (Mul a (differentiate' b))) 
+
+
+
+
+
+
+
+-- differentiate (Lit n) Var = (Lit n)
+
