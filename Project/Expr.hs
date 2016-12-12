@@ -6,8 +6,8 @@ import Data.List
 import Data.String
 import System.Random
 import Control.Monad (replicateM)
-
 import Test.QuickCheck.Gen
+import Test.QuickCheck
 
 
 data Expr = Lit Double
@@ -60,17 +60,15 @@ expr = leftAssoc Add term (char '+')
 
 term = leftAssoc Mul factor (char '*')
 
-factor = (Lit <$> number) 
+factor = (Lit <$> num) 
         <|> var 
         <|> sinParse <*> factor 
         <|> cosParse <*> factor 
         <|> (char '(' *> expr <* char ')')
 
 -- | Parse a number
-number :: Parser Double
-number = do 
-    s <- (chain (oneOrMore digit) (char '.'))
-    if length s < 3 then return (read (intercalate "." s)) else failure 
+num = do a <- readsP ::  Parser Double
+         return a
 
 -- | Parse a variable
 var :: Parser Expr
@@ -92,31 +90,36 @@ cosParse = do   s <- string "cos"
                 return Cos  
 
 prop_ShowReadExpr :: Expr -> Bool
-prop_ShowReadExpr ex = fromJust (readExpr $ showExpr ex) == ex
-
+prop_ShowReadExpr ex = showExpr (fromJust (readExpr $ showExpr ex)) == showExpr ex
 
 arbExpr :: Int -> Gen Expr
 arbExpr n 
     | n == 0 = rNum
-    | otherwise = undefined -- oneof [srAdd, rMul, rVar, rSin, rCos, rNum]
+    | otherwise = oneof [rAdd, rMul, return Var, rSin, rCos, rNum]
     where
-        rNum = Lit $ read $ show genDouble
-{-
-            -- do
-            -- a <- choose(0,1000)
-            -- b <- (fromInteger $ choose(0,9)) `div` 10 
-            return $ Lit rNum
-        rAdd = undefined
-        rMul = undefined 
-        rVar = undefined
-        rSin = undefined
-        rCos = undefined
--}
+        rNum = do
+            a <- elements [1..10 :: Double]
+            b <- elements [1..10 :: Double] 
+            return $ Lit (a) 
+        rAdd = do
+            term1 <- arbExpr size
+            term2 <- arbExpr size
+            return (Add term1 term2)
+        rMul = do
+            factor1 <- arbExpr size
+            factor2 <- arbExpr size
+            return (Mul factor1 factor2) 
+        rSin = do
+            expr <- arbExpr (n-1)
+            return (Sin expr)
+        rCos = do
+            expr <- arbExpr (n-1)
+            return (Cos expr)
+        size = n `div` 2
+
+instance Arbitrary Expr where
+  arbitrary = sized arbExpr
 
 genDouble :: IO Double
 genDouble = randomRIO (1, 10)
-
--- genDouble = randomIO :: IO Double
-
-
 
