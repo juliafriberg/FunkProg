@@ -117,5 +117,32 @@ arbExpr n
 instance Arbitrary Expr where
   arbitrary = sized arbExpr
 
+simplify :: Expr -> Expr
+simplify (Add a b) = simplifiedAdd (simplify a) (simplify b)
+simplify (Mul a b) = simplifiedMul (simplify a) (simplify b)
+simplify (Sin a) = simplifiedSin (simplify a)
+simplify (Cos a) = simplifiedCos (simplify a) 
+simplify e = e 
 
+simplifiedAdd :: Expr -> Expr -> Expr
+simplifiedAdd (Lit 0) e = e
+simplifiedAdd e (Lit 0) = e
+simplifiedAdd (Lit n) (Lit m) = Lit (n+m)
+-- TODO add with same expression: 5x + 3x = 8x
+simplifiedAdd e1 e2 = (Add e1 e2)
 
+simplifiedMul :: Expr -> Expr -> Expr
+simplifiedMul (Lit 0) _ =  (Lit 0)
+simplifiedMul _ (Lit 0) = (Lit 0)
+simplifiedMul (Lit 1) e = e
+simplifiedMul e (Lit 1) = e
+simplifiedMul (Lit n) (Lit m) = Lit (n*m)
+simplifiedMul e1 e2 = (Mul e1 e2)
+
+simplifiedSin :: Expr -> Expr
+simplifiedSin (Lit n) = (Lit (sin n))
+simplifiedSin e = (Sin e)
+
+simplifiedCos :: Expr -> Expr
+simplifiedCos (Lit n) = (Lit (cos n))
+simplifiedCos e = (Cos e)
