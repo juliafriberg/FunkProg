@@ -10,9 +10,8 @@ arbExpr n
     | otherwise = oneof [rAdd, rMul, return Var, rSin, rCos, rNum]
     where
         rNum = do
-            a <- elements [1..10 :: Double]
-            b <- elements [1..10 :: Double] 
-            return $ Lit (a) 
+            a <- elements [1..10 :: Double] -- TODO fix 
+            return $ Lit a 
         rAdd = do
             term1 <- arbExpr size
             term2 <- arbExpr size

@@ -17,7 +17,7 @@ readAndDraw :: Elem -> Canvas -> IO ()
 readAndDraw input canvas =
     do
         text <- getValue input
-        let expr = (fromJust (readExpr (fromJust text)))
+        let expr = fromJust (readExpr (fromJust text))
         render canvas (stroke (path (points expr 0.04 (canWidth, canHeight))))
 
 main = do
@@ -55,6 +55,6 @@ points exp scale (width,height) = calculatePoints 0
             | x <= fromIntegral width = if y <= fromIntegral height && y >= 0 then (x, y):calculatePoints (x+1) else calculatePoints (x+1)
             | otherwise = []
             where y = realToPix (eval exp (pixToReal x))
-        pixToReal x = x * scale - (fromIntegral width) * scale / 2
-        realToPix y = (- y / scale) + (fromIntegral height) / 2
+        pixToReal x = x * scale - fromIntegral width * scale / 2
+        realToPix y = (- y / scale) + fromIntegral height / 2
 
