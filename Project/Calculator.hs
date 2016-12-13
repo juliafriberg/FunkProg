@@ -29,12 +29,15 @@ renderCanvas canvas scale expr = render canvas (stroke (path (points (fromJust e
 getExpr :: Maybe String -> Maybe Expr
 getExpr input = maybe Nothing readExpr input      
 
+
 main = do
     -- Elements
     canvas  <- mkCanvas canWidth canHeight   -- The drawing area
     fx      <- mkHTML "<i>f</i>(<i>x</i>)="  -- The text "f(x)="
+    f'x     <- mkHTML "<i>f'</i>(<i>x</i>)="
     input   <- mkInput 40 "x"                -- The formula input
     draw    <- mkButton "Draw graph"         -- The draw button
+    diff    <- mkButton "Differentiate"
     dropdown <- mkDropDown
     zoom1   <- mkOption "50%"
     zoom2   <- mkOption "100%"
@@ -44,9 +47,11 @@ main = do
 
     -- Layout
     formula <- mkDiv
+    buttons <- mkDiv
     dropDown dropdown [zoom2, zoom1, zoom3] 
     row formula [fx,input]
-    column documentBody [canvas,dropdown,formula,draw]
+    row buttons [draw,diff]
+    column documentBody [canvas,dropdown,formula,buttons]
 
     -- Styling
     setStyle documentBody "backgroundColor" "lightblue"
@@ -60,7 +65,20 @@ main = do
     onEvent draw  Click $ \_    -> readAndDraw input can
     onEvent input KeyUp $ \code -> when (code==13) $ readAndDraw input can
     onEvent dropdown Change $ \_ -> zoom input dropdown can
+    onEvent diff Click $ \_ -> drawDiff can input
       -- "Enter" key has code 13
+
+drawDiff :: Canvas -> Elem -> IO ()
+drawDiff can input = do
+    readAndDraw input can 
+    text <- getValue input
+    let expr = getExpr text
+    let pic = case expr of
+            Nothing -> stroke (path [])
+            _ -> stroke (path (points (differentiate (fromJust expr)) originalScale (canWidth, canHeight)))
+    
+    renderOnTop can (color (RGB 0 255 0) pic)
+
 
 zoom :: Elem -> Elem -> Canvas -> IO ()
 zoom input dropdown can = 
