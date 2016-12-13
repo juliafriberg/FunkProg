@@ -17,8 +17,13 @@ readAndDraw :: Elem -> Canvas -> IO ()
 readAndDraw input canvas =
     do
         text <- getValue input
-        let expr = fromJust (readExpr (fromJust text))
-        render canvas (stroke (path (points expr 0.04 (canWidth, canHeight))))
+        case text of 
+            Nothing -> return ()
+            _ -> do
+                let expr = readExpr (fromJust text)
+                case expr of 
+                    Nothing -> render canvas (stroke (path []))
+                    _ -> render canvas (stroke (path (points (fromJust expr) 0.04 (canWidth, canHeight))))
 
 main = do
     -- Elements
