@@ -16,20 +16,18 @@ canHeight = 300
 
 originalScale = 0.04
 
-readAndDraw :: Elem -> Canvas -> Double -> IO ()
-readAndDraw input canvas scale =
+readAndDraw :: Elem -> Canvas -> IO ()
+readAndDraw input canvas =
     do
         text <- getValue input
-        case text of 
-            Nothing -> return ()
-            _ -> do
-                let expr = readExpr (fromJust text)
-                renderCanvas canvas scale expr
+        renderCanvas canvas originalScale (getExpr text)
 
 renderCanvas :: Canvas -> Double -> Maybe Expr -> IO ()
 renderCanvas canvas scale Nothing = render canvas (stroke (path []))
 renderCanvas canvas scale expr = render canvas (stroke (path (points (fromJust expr) scale (canWidth, canHeight))))
-        
+
+getExpr :: Maybe String -> Maybe Expr
+getExpr input = maybe Nothing readExpr input      
 
 main = do
     -- Elements
@@ -59,8 +57,8 @@ main = do
 
     -- Interaction
     Just can <- getCanvas canvas
-    onEvent draw  Click $ \_    -> readAndDraw input can originalScale
-    onEvent input KeyUp $ \code -> when (code==13) $ readAndDraw input can originalScale
+    onEvent draw  Click $ \_    -> readAndDraw input can
+    onEvent input KeyUp $ \code -> when (code==13) $ readAndDraw input can
     onEvent dropdown Change $ \_ -> zoom input dropdown can
       -- "Enter" key has code 13
 
@@ -68,12 +66,13 @@ zoom :: Elem -> Elem -> Canvas -> IO ()
 zoom input dropdown can = 
     do
         value <- getValue dropdown
+        text <- getValue input
         let value' = fromJust value
         let scale = case value' of
                         "50%" -> 2
                         "100%" -> 1
                         "150%" -> 0.5
-        readAndDraw input can (scale * originalScale)
+        renderCanvas can (scale * originalScale) (getExpr text)
 
 points :: Expr -> Double -> (Int,Int) -> [Point]
 points exp scale (width,height) = calculatePoints 0
