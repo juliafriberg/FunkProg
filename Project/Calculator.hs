@@ -31,12 +31,16 @@ main = do
     fx      <- mkHTML "<i>f</i>(<i>x</i>)="  -- The text "f(x)="
     input   <- mkInput 40 "x"                -- The formula input
     draw    <- mkButton "Draw graph"         -- The draw button
+    dropdown <- mkDropDown
+    zoom1   <- mkOption "1"
+    zoom2   <- mkOption "2"
       -- The markup "<i>...</i>" means that the text inside should be rendered
       -- in italics.
 
     -- Layout
     formula <- mkDiv
-    row formula [fx,input]
+    dropDown dropdown [zoom1, zoom2] 
+    row formula [fx,input, dropdown]
     column documentBody [canvas,formula,draw]
 
     -- Styling

@@ -34,6 +34,9 @@ column parent children = do
     cs <- sequence [wrapDiv c | c <- children]
     appendChildren parent cs
 
+dropDown :: Elem -> [Elem] -> IO ()
+dropDown = appendChildren
+
 -- `mkInput width init` makes an input element with the specified width and
 -- initial text
 mkInput :: Int -> String -> IO Elem
@@ -45,6 +48,13 @@ mkInput width init = do
 -- `mkButton label` makes a clickable button with the given label
 mkButton :: String -> IO Elem
 mkButton label = newElem "button" `with` [prop "textContent" =: label]
+
+-- `mkButton label` makes a clickable button with the given label
+mkDropDown :: IO Elem
+mkDropDown = newElem "select"
+
+mkOption :: String -> IO Elem
+mkOption option = newElem "option" `with` [prop "textContent" =: option]
 
 -- `mkHTML html` makes an element with the specified HTML content
 mkHTML :: String -> IO Elem
