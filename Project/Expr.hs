@@ -44,7 +44,7 @@ showExpr (Op Mul a b) = showFactor a ++ " * " ++ showFactor b
         showFactor (Op Add a b) = "(" ++ showExpr (Op Add a b) ++ ")" 
         showFactor e = showExpr e
 showExpr Var = "x"
-showExpr (F f a) = (map toLower (show f)) ++ " " ++ showBrackets a
+showExpr (F f a) = map toLower (show f) ++ " " ++ showBrackets a
     where
         -- To make sure parantheses are where they should be.
         showBrackets :: Expr -> String
@@ -57,7 +57,7 @@ eval (Lit n) _ = n
 eval (Op Add a b) x = eval a x + eval b x
 eval (Op Mul a b) x = eval a x * eval b x
 eval Var x = x
-eval (F f a) x = (getFun f) (eval a x)
+eval (F f a) x = getFun f (eval a x)
 
 -- Interprets the string as an expression. 
 -- Returns Just expression if succeeds, otherwise Nothing. 
@@ -152,19 +152,23 @@ simplify (F f a) = simplifiedFun (F f (simplify a))
     where
         -- Simplifies function expressions
         simplifiedFun :: Expr -> Expr
-        simplifiedFun (F f (Lit n)) = Lit ((getFun f) n)
-        simplifiedFun (F f a) = (F f a)
+        simplifiedFun (F f (Lit n)) = Lit (getFun f n)
+        simplifiedFun (F f a) = F f a
 
 simplify e = e 
 
-
+-- Differentiates the expression with respect to x
 differentiate :: Expr -> Expr
-differentiate e = simplify $ differentiate' (simplify e)
+differentiate e = simplify $ diff (simplify e)
     where
-        differentiate' (Lit _) = Lit 0
-        differentiate' Var = Lit 1
-        differentiate' (F Sin e) = Op Mul (differentiate' e) (F Cos e)
-        differentiate' (F Cos e) = Op Mul (Op Mul (Lit (-1)) (differentiate' e)) (F Sin e)
-        differentiate' (Op Add a b) = Op Add (differentiate' a) (differentiate' b)
-        differentiate' (Op Mul a b) = Op Add (Op Mul (differentiate' a) b) (Op Mul a (differentiate' b))
+        -- Rules for calculating derivatives
+        diff (Lit _) = Lit 0
+        diff Var = Lit 1
+        diff (F Sin e) = Op Mul (diff e) (F Cos e)
+        diff (F Cos e) = 
+            Op Mul (Op Mul (Lit (-1)) (diff e)) (F Sin e)
+        diff (Op Add a b) = 
+            Op Add (diff a) (diff b)
+        diff (Op Mul a b) = 
+            Op Add (Op Mul (diff a) b) (Op Mul a (diff b))
 

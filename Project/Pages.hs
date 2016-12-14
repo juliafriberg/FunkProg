@@ -1,14 +1,10 @@
 -- This module defines helper functions for creating web pages using HASTE
-
 module Pages where
-
-
 
 import Haste
 import Haste.Prim
 import Haste.Foreign
 import Haste.DOM
-
 
 
 -- `mkDiv` makes a container element for grouping elements together
@@ -40,7 +36,7 @@ dropDown = appendChildren
 -- `mkInput width init` makes an input element with the specified width and
 -- initial text
 mkInput :: Int -> String -> IO Elem
-mkInput width init = do
+mkInput width init =
     newElem "input" `with` [attr "type"  =: "text",
                             attr "size"  =: show width,
                             attr "value" =: init]
