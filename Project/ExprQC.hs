@@ -34,9 +34,26 @@ prop_ShowReadExpr :: Expr -> Bool
 prop_ShowReadExpr ex = showExpr (fromJust (readExpr $ showExpr ex)) == showExpr ex
 
 -- Tests that the simplified version has the same value 
--- as the original expression.
+-- as the original expression and that it has been simplified 
+-- as much as expected.
 prop_simplify :: Expr -> Double -> Bool
-prop_simplify e d = eval e d == eval (simplify e) d
+prop_simplify e d = (eval e d == eval simplifiedExpr d) && isSimplified simplifiedExpr
+    where 
+        simplifiedExpr = simplify e
+        isSimplified :: Expr -> Bool
+        isSimplified (F f (Lit _)) = False
+        isSimplified (F f e) = isSimplified e
+        isSimplified (Op Add Var Var) = False
+        isSimplified (Op Mul (Lit 1) e) = False
+        isSimplified (Op ops (Lit 0) e) = False
+        isSimplified (Op ops e (Lit 0)) = False
+        isSimplified (Op ops (Lit _) (Lit _)) = False
+        isSimplified (Op ops (Op Mul (Lit n) e1) e2) 
+                | e1 == e2 = False
+        isSimplified (Op ops (Op Mul (Lit n) e1) (Op Mul (Lit m) e2))
+                | e1 == e2 = False
+        isSimplified (Op ops e1 e2) = isSimplified e1 && isSimplified e2
+        isSimplified e = True
 
 
--- TODO add property for checking if it simplifies enough.
+        
