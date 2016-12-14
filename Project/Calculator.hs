@@ -34,12 +34,12 @@ main = do
     -- Elements
     canvas  <- mkCanvas canWidth canHeight   -- The drawing area
     fx      <- mkHTML "<i>f</i>(<i>x</i>)="  -- The text "f(x)="
-    f'x     <- mkHTML "<i>f'</i>(<i>x</i>)="
+    f'x     <- mkHTML ""
     input   <- mkInput 40 "x"                -- The formula input
     draw    <- mkButton "Draw graph"         -- The draw button
-    diff    <- mkButton "Differentiate"
-    dropdown <- mkDropDown
-    zoom1   <- mkOption "50%"
+    diff    <- mkButton "Differentiate"      -- The differentiate button
+    dropdown <- mkDropDown                   -- The dropdown element
+    zoom1   <- mkOption "50%"                -- Elements in the dropdown list
     zoom2   <- mkOption "100%"
     zoom3   <- mkOption "150%"
       -- The markup "<i>...</i>" means that the text inside should be rendered
@@ -51,33 +51,44 @@ main = do
     dropDown dropdown [zoom2, zoom1, zoom3] 
     row formula [fx,input]
     row buttons [draw,diff]
-    column documentBody [canvas,dropdown,formula,buttons]
+    column documentBody [canvas,dropdown,formula,buttons,f'x]
 
     -- Styling
     setStyle documentBody "backgroundColor" "lightblue"
     setStyle documentBody "textAlign" "center"
     setStyle input "fontSize" "14pt"
+    setStyle f'x "color" "darkmagenta"
     focus input
     select input
 
     -- Interaction
     Just can <- getCanvas canvas
-    onEvent draw  Click $ \_    -> readAndDraw input can
-    onEvent input KeyUp $ \code -> when (code==13) $ readAndDraw input can
-    onEvent dropdown Change $ \_ -> zoom input dropdown can
-    onEvent diff Click $ \_ -> drawDiff can input
+    onEvent draw  Click $ \_    -> do 
+                                    setProp f'x "innerHTML" ""
+                                    readAndDraw input can
+    onEvent input KeyUp $ \code -> do
+                                    setProp f'x "innerHTML" ""
+                                    when (code==13) $ readAndDraw input can
       -- "Enter" key has code 13
+    onEvent dropdown Change $ \_ -> zoom input dropdown can
+    onEvent diff Click $ \_ -> drawDiff can input f'x
+    
 
-drawDiff :: Canvas -> Elem -> IO ()
-drawDiff can input = do
+drawDiff :: Canvas -> Elem -> Elem -> IO ()
+drawDiff can input f'x = do
     readAndDraw input can 
     text <- getValue input
     let expr = getExpr text
-    let pic = case expr of
-            Nothing -> stroke (path [])
-            _ -> stroke (path (points (differentiate (fromJust expr)) originalScale (canWidth, canHeight)))
+    let (pic, textExpr) = case expr of
+            Nothing -> (stroke (path []), "")
+            _ -> do
+                    let diffExpr = differentiate (fromJust expr)
+                    (stroke (path (points diffExpr originalScale (canWidth, canHeight))), "<i>f'</i>(<i>x</i>)=" ++ showExpr diffExpr)
     
-    renderOnTop can (color (RGB 0 255 0) pic)
+
+
+    setProp f'x "innerHTML" textExpr
+    renderOnTop can (color (RGB 139 0 139) pic)
 
 
 zoom :: Elem -> Elem -> Canvas -> IO ()
