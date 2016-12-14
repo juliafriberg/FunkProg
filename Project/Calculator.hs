@@ -82,16 +82,7 @@ readAndDraw :: Elem -> Canvas -> IO ()
 readAndDraw input canvas =
     do
         text <- getValue input
-        renderCanvas canvas origScale (getExpr text)
-
-
--- Renders the canvas with given scale and expression 
--- Renders nothing if expression is Nothing
-renderCanvas :: Canvas -> Double -> Maybe Expr -> IO ()
-renderCanvas canvas scale Nothing = render canvas (stroke (path []))
-renderCanvas canvas scale expr = render canvas (stroke (path pointsToRender))
-    where 
-        pointsToRender = points (fromJust expr) scale (canWidth, canHeight)
+        render canvas (exprToPic (getExpr text) origScale)
 
 
 -- Returns an expression
@@ -110,7 +101,12 @@ zoom input dropdown can =
                         "50%" -> 2
                         "100%" -> 1
                         "150%" -> 0.5
-        renderCanvas can (scale * origScale) (getExpr text)
+        render can (exprToPic (getExpr text) (scale * origScale))
+
+
+exprToPic :: Maybe Expr -> Double -> Picture ()
+exprToPic expr scale = maybe (stroke (path [])) (\e -> 
+    stroke (path (points e scale (canWidth, canHeight)))) expr
 
 
 -- Draws differentiate of the function in the 
@@ -121,16 +117,14 @@ drawDiff can input f'x = do
     readAndDraw input can 
     text <- getValue input
     let expr = getExpr text
-    let (pic, textExpr) = case expr of
-            Nothing -> (stroke (path []), "")
+    let (textExpr, diffExpr) = case expr of
+            Nothing -> ("",Nothing)
             _ -> do
-                let diffExpr = differentiate (fromJust expr)
-                let diffText = "<i>f'</i>(<i>x</i>)=" ++ showExpr diffExpr
-                let pToDraw = points diffExpr origScale (canWidth, canHeight)
-                let diffPic  = stroke (path pToDraw)
-                (diffPic, diffText)
+                let diffEq = differentiate (fromJust expr)
+                let diffText = "<i>f'</i>(<i>x</i>)=" ++ showExpr diffEq
+                (diffText, Just diffEq)
  
 
     setProp f'x "innerHTML" textExpr
-    renderOnTop can (color (RGB 139 0 139) pic)
+    renderOnTop can (color (RGB 139 0 139) (exprToPic diffExpr origScale))
 
